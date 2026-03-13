@@ -7,20 +7,8 @@
 目前它更偏向个人本地工具，而不是通用 SaaS。
 
 ## 截图
-
-你可以在这里放项目截图：
-
-```text
-docs/images/overview.png
-docs/images/search.png
-```
-
-示例：
-
-```md
 ![overview](docs/images/overview.png)
-![search](docs/images/search.png)
-```
+![overview](docs/images/search.png)
 
 如果你暂时还没准备截图，也完全没关系，先发项目也没问题，后面再补就行。
 
