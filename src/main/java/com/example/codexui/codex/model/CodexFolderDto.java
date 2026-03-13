@@ -4,6 +4,7 @@ public class CodexFolderDto {
 
     private String id;
     private String name;
+    private int sortIndex;
 
     public CodexFolderDto() {
     }
@@ -11,6 +12,12 @@ public class CodexFolderDto {
     public CodexFolderDto(String id, String name) {
         this.id = id;
         this.name = name;
+    }
+
+    public CodexFolderDto(String id, String name, int sortIndex) {
+        this.id = id;
+        this.name = name;
+        this.sortIndex = sortIndex;
     }
 
     public String getId() {
@@ -27,5 +34,13 @@ public class CodexFolderDto {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getSortIndex() {
+        return sortIndex;
+    }
+
+    public void setSortIndex(int sortIndex) {
+        this.sortIndex = sortIndex;
     }
 }

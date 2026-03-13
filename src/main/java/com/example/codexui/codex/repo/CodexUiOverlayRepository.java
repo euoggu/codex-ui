@@ -74,9 +74,13 @@ public class CodexUiOverlayRepository {
             s.execute("create table if not exists folders (" +
                     "id text primary key, " +
                     "name text not null, " +
+                    "sort_index integer not null default 0, " +
                     "created_at integer not null, " +
                     "updated_at integer not null" +
                     ")");
+
+            ensureFolderSortColumn(c, s);
+            normalizeFolderSortOrder(c);
 
             s.execute("create table if not exists session_overrides (" +
                     "thread_id text primary key, " +
@@ -104,10 +108,14 @@ public class CodexUiOverlayRepository {
     public List<CodexFolderDto> listFolders() {
         List<CodexFolderDto> out = new ArrayList<CodexFolderDto>();
         try (Connection c = open();
-             PreparedStatement ps = c.prepareStatement("select id, name from folders order by updated_at desc")) {
+             PreparedStatement ps = c.prepareStatement("select id, name, sort_index from folders order by sort_index asc, updated_at desc")) {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    out.add(new CodexFolderDto(rs.getString("id"), rs.getString("name")));
+                    out.add(new CodexFolderDto(
+                            rs.getString("id"),
+                            rs.getString("name"),
+                            rs.getInt("sort_index")
+                    ));
                 }
             }
             return out;
@@ -123,14 +131,17 @@ public class CodexUiOverlayRepository {
         }
         String id = "f-" + UUID.randomUUID().toString();
         long now = System.currentTimeMillis();
+        int sortIndex;
         try (Connection c = open();
-             PreparedStatement ps = c.prepareStatement("insert into folders(id, name, created_at, updated_at) values(?,?,?,?)")) {
+             PreparedStatement ps = c.prepareStatement("insert into folders(id, name, sort_index, created_at, updated_at) values(?,?,?,?,?)")) {
+            sortIndex = nextFolderSortIndex(c);
             ps.setString(1, id);
             ps.setString(2, trimmed);
-            ps.setLong(3, now);
+            ps.setInt(3, sortIndex);
             ps.setLong(4, now);
+            ps.setLong(5, now);
             ps.executeUpdate();
-            return new CodexFolderDto(id, trimmed);
+            return new CodexFolderDto(id, trimmed, sortIndex);
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "创建文件夹失败", e);
         }
@@ -173,6 +184,42 @@ public class CodexUiOverlayRepository {
             }
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "删除文件夹失败", e);
+        }
+    }
+
+    public void moveFolder(String id, String direction) {
+        String normalized = direction == null ? "" : direction.trim().toLowerCase();
+        if (!"up".equals(normalized) && !"down".equals(normalized)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "direction 仅支持 up / down");
+        }
+
+        try (Connection c = open()) {
+            c.setAutoCommit(false);
+            try {
+                List<String> ids = listFolderIdsInOrder(c);
+                int index = ids.indexOf(id);
+                if (index < 0) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到文件夹: " + id);
+                }
+                int targetIndex = "up".equals(normalized) ? index - 1 : index + 1;
+                if (targetIndex < 0 || targetIndex >= ids.size()) {
+                    c.rollback();
+                    return;
+                }
+                String tmp = ids.get(index);
+                ids.set(index, ids.get(targetIndex));
+                ids.set(targetIndex, tmp);
+                rewriteFolderSortOrder(c, ids);
+                c.commit();
+            } catch (RuntimeException e) {
+                c.rollback();
+                throw e;
+            } catch (SQLException e) {
+                c.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "调整文件夹顺序失败", e);
         }
     }
 
@@ -299,5 +346,63 @@ public class CodexUiOverlayRepository {
     private Connection open() throws SQLException {
         Path dbPath = properties.getDbPath();
         return DriverManager.getConnection("jdbc:sqlite:" + dbPath.toAbsolutePath());
+    }
+
+    private void ensureFolderSortColumn(Connection c, Statement s) throws SQLException {
+        if (hasColumn(c, "folders", "sort_index")) {
+            return;
+        }
+        s.execute("alter table folders add column sort_index integer not null default 0");
+    }
+
+    private boolean hasColumn(Connection c, String tableName, String columnName) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("pragma table_info(" + tableName + ")");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                if (columnName.equalsIgnoreCase(rs.getString("name"))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private void normalizeFolderSortOrder(Connection c) throws SQLException {
+        List<String> ids = listFolderIdsInOrder(c);
+        rewriteFolderSortOrder(c, ids);
+    }
+
+    private List<String> listFolderIdsInOrder(Connection c) throws SQLException {
+        List<String> ids = new ArrayList<String>();
+        try (PreparedStatement ps = c.prepareStatement(
+                "select id from folders order by sort_index asc, updated_at desc, created_at asc, id asc"
+        );
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                ids.add(rs.getString("id"));
+            }
+        }
+        return ids;
+    }
+
+    private void rewriteFolderSortOrder(Connection c, List<String> ids) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("update folders set sort_index = ? where id = ?")) {
+            for (int i = 0; i < ids.size(); i++) {
+                ps.setInt(1, i + 1);
+                ps.setString(2, ids.get(i));
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    private int nextFolderSortIndex(Connection c) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("select coalesce(max(sort_index), 0) + 1 as next_index from folders");
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("next_index");
+            }
+            return 1;
+        }
     }
 }

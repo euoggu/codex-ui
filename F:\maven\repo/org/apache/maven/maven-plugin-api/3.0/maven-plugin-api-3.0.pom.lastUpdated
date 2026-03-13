@@ -1,5 +1,0 @@
-#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
-#Thu Mar 12 23:18:11 CST 2026
-@default-jfrog-https\://repo.yyrd.com/artifactory/yonyou-public/.lastUpdated=1773328690949
-https\://repo.maven.apache.org/maven2/.lastUpdated=1773328691946
-https\://repo.yyrd.com/artifactory/yonyou-public/.error=Could not transfer artifact org.apache.maven\:maven-plugin-api\:pom\:3.0 from/to jfrog (https\://repo.yyrd.com/artifactory/yonyou-public/)\: Connect to repo.yyrd.com\:443 [repo.yyrd.com/172.20.60.211] failed\: Connect timed out

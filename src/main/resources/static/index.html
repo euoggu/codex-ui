@@ -123,6 +123,24 @@
             justify-content: space-between;
             gap: 8px;
         }
+        .toolbar-left,
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tool-mini {
+            border: 1px solid var(--sb-border);
+            background: var(--sb-hover);
+            color: var(--sb-muted);
+            border-radius: 7px;
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .tool-mini:hover { color: var(--sb-text); background: var(--sb-active); }
         .segmented {
             display: inline-flex;
             background: var(--sb-hover);
@@ -157,7 +175,7 @@
         /* 文件夹标题行 */
         .folder-header {
             display: flex; align-items: center; gap: 5px;
-            padding: 5px 12px 5px 10px;
+            padding: 5px 12px 5px 12px;
             cursor: pointer;
             color: var(--sb-muted);
             font-size: 11px; font-weight: 600;
@@ -177,15 +195,53 @@
         }
         .folder-op-btn:hover { background: var(--sb-active); color: var(--sb-text); }
         .folder-sessions.collapsed { display: none; }
+        .folder-count {
+            font-size: 11px;
+            color: var(--sb-muted);
+        }
+        .cwd-header {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px 6px 32px;
+            cursor: pointer;
+            color: var(--sb-text);
+            font-size: 12px;
+        }
+        .cwd-header:hover { background: rgba(255,255,255,.03); }
+        .cwd-arrow { font-size: 9px; transition: transform .15s; width: 12px; text-align: center; color: var(--sb-muted); }
+        .cwd-header.collapsed .cwd-arrow { transform: rotate(-90deg); }
+        .cwd-title {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .cwd-name {
+            font-size: 12px;
+            color: var(--sb-text);
+            white-space: nowrap;
+        }
+        .cwd-path {
+            font-size: 11px;
+            color: var(--sb-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .cwd-count {
+            font-size: 11px;
+            color: var(--sb-muted);
+            white-space: nowrap;
+        }
+        .cwd-sessions.collapsed { display: none; }
 
         /* session 条目 */
         .session-item {
             display: flex; align-items: flex-start;
-            padding: 7px 12px 7px 26px;
+            padding: 7px 12px 7px 54px;
             cursor: pointer; gap: 7px;
             transition: background .1s;
         }
-        .session-item.top-level { padding-left: 14px; }
         .session-item:hover { background: var(--sb-hover); }
         .session-item.active { background: var(--sb-active); }
         .session-dot {
@@ -240,6 +296,26 @@
         .no-results {
             padding: 32px 16px; text-align: center;
             color: var(--sb-muted); font-size: 13px;
+        }
+        .search-trigger {
+            width: 100%;
+            padding: 7px 62px 7px 30px;
+            background: var(--sb-hover);
+            border: 1px solid var(--sb-border);
+            border-radius: 7px;
+            color: var(--sb-muted);
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .search-trigger:hover { border-color: #4b5563; color: var(--sb-text); }
+        .search-shortcut {
+            position: absolute;
+            right: 8px;
+            color: var(--sb-muted);
+            font-size: 11px;
+            pointer-events: none;
         }
 
         /* ===== 主内容区 ===== */
@@ -433,6 +509,155 @@
         }
         .field-input:focus, .field-select:focus { border-color: var(--accent); }
         .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+        .search-modal {
+            width: min(1120px, calc(100vw - 48px));
+            height: min(760px, calc(100vh - 48px));
+            background: var(--panel);
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .search-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+        .search-modal-input {
+            flex: 1;
+            min-width: 0;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+        }
+        .search-modal-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+        }
+        .search-modal-body {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+        }
+        .search-panel-list {
+            border-right: 1px solid var(--line);
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .search-panel-detail {
+            overflow-y: auto;
+            padding: 16px 18px 18px;
+            background: #fcfcfd;
+        }
+        .search-status {
+            padding: 14px 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .search-session-item {
+            width: 100%;
+            text-align: left;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: transparent;
+            padding: 10px 12px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-family: inherit;
+        }
+        .search-session-item:hover {
+            background: #f8fafc;
+            border-color: #e5e7eb;
+        }
+        .search-session-item.active {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .search-session-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .search-session-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .search-session-count {
+            font-size: 11px;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+        .search-session-cwd,
+        .search-session-time {
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .search-detail-head h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .search-detail-meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+        .search-match {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--panel);
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+        .search-match-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .search-match-role {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .search-match-time {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .search-match-snippet,
+        .search-match-content {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .search-match-content {
+            margin-top: 8px;
+            color: #4b5563;
+            font-size: 12px;
+        }
+        .msg.focused .bubble {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96,165,250,.15);
+        }
 
         /* 搜索高亮 */
         mark { background: #fef08a; border-radius: 2px; padding: 0 1px; }
@@ -500,96 +725,93 @@
             <div class="sidebar-search">
                 <div class="search-wrap">
                     <span class="search-icon">🔍</span>
-                    <input v-model="searchQuery" type="text" class="search-input"
-                           placeholder="搜索 session、消息内容…">
-                    <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">✕</button>
+                    <button class="search-trigger" @click="openSearchModal()">
+                        {{ searchQuery ? ('搜索：' + searchQuery) : '搜索消息内容（类似 Ctrl+Shift+F）' }}
+                    </button>
+                    <span class="search-shortcut">Ctrl+Shift+F</span>
                 </div>
             </div>
 
             <div class="sidebar-toolbar">
-                <div class="segmented">
-                    <button class="seg-btn" :class="{ active: !showArchived }" @click="switchArchived(false)">活动</button>
-                    <button class="seg-btn" :class="{ active: showArchived }" @click="switchArchived(true)">归档</button>
+                <div class="toolbar-left">
+                    <div class="segmented">
+                        <button class="seg-btn" :class="{ active: !showArchived }" @click="switchArchived(false)">活动</button>
+                        <button class="seg-btn" :class="{ active: showArchived }" @click="switchArchived(true)">归档</button>
+                    </div>
+                    <button class="tool-mini" @click="expandAllTree">展开</button>
+                    <button class="tool-mini" @click="collapseAllTree">收起</button>
                 </div>
-                <span class="side-hint">{{ busy.list ? '加载中...' : (visibleSessions.length + ' 项') }}</span>
+                <div class="toolbar-right">
+                    <span class="side-hint">{{ busy.list ? '加载中...' : (visibleSessions.length + ' 项') }}</span>
+                </div>
             </div>
 
             <!-- Session 树 -->
             <div class="session-tree">
-                <!-- 无搜索结果 -->
-                <div v-if="searchQuery && visibleSessions.length === 0" class="no-results">
-                    未找到「{{ searchQuery }}」相关内容
+                <div v-if="folderTree.length === 0" class="no-results">
+                    暂无 session
                 </div>
 
                 <template v-else>
-                    <!-- 各文件夹 -->
-                    <div v-for="folder in folders" :key="folder.id">
-                        <!-- 搜索时过滤掉空文件夹 -->
-                        <template v-if="!searchQuery || getFolderSessions(folder.id).length > 0">
-                            <!-- 文件夹标题行 -->
-                            <div class="folder-header"
-                                 :class="{ collapsed: !searchQuery && folder.collapsed }"
-                                 @click="!searchQuery && toggleFolder(folder)">
-                                <span class="folder-arrow">▾</span>
-                                <span>📁</span>
-                                <!-- v-html 用于显示搜索高亮 -->
-                                <span class="folder-name" v-html="hl(folder.name)"></span>
-                                <div class="folder-ops" @click.stop>
-                                    <button class="folder-op-btn" title="重命名"
-                                            @click="openRenameFolderModal(folder)">✏️</button>
-                                    <button class="folder-op-btn" title="删除"
-                                            @click="confirmDeleteFolder(folder)">🗑</button>
-                                </div>
-                            </div>
-                            <!-- 文件夹下的 sessions -->
-                            <div class="folder-sessions"
-                                 :class="{ collapsed: !searchQuery && folder.collapsed }">
-                                <div v-if="getFolderSessions(folder.id).length === 0"
-                                     style="padding:4px 16px 8px 28px;font-size:12px;color:var(--sb-muted)">
-                                    暂无 session
-                                </div>
-                                <div v-for="s in getFolderSessions(folder.id)" :key="s.id"
-                                     class="session-item"
-                                     :class="{ active: s.id === activeId }"
-                                     @click="selectSession(s.id)">
-                                    <div class="session-dot"></div>
-                                    <div class="session-body">
-                                        <div class="session-title" v-html="hl(s.title)"></div>
-                                        <div class="session-meta">
-                                            <div class="session-preview">{{ preview(s) }}</div>
-                                            <div class="session-time">{{ formatSessionTime(s.updatedAt) }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="session-ops" @click.stop>
-                                        <button class="session-more-btn"
-                                                @click="openSessionMenu($event, s)">⋯</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-
-                    <!-- 未分类 sessions -->
-                    <template v-if="uncategorized.length > 0">
-                        <div class="uncategorized-label">未分类</div>
-                        <div v-for="s in uncategorized" :key="s.id"
-                             class="session-item top-level"
-                             :class="{ active: s.id === activeId }"
-                             @click="selectSession(s.id)">
-                            <div class="session-dot"></div>
-                            <div class="session-body">
-                                <div class="session-title" v-html="hl(s.title)"></div>
-                                <div class="session-meta">
-                                    <div class="session-preview">{{ preview(s) }}</div>
-                                    <div class="session-time">{{ formatSessionTime(s.updatedAt) }}</div>
-                                </div>
-                            </div>
-                            <div class="session-ops" @click.stop>
-                                <button class="session-more-btn"
-                                        @click="openSessionMenu($event, s)">⋯</button>
+                    <div v-for="folder in folderTree" :key="folder.id">
+                        <div class="folder-header"
+                             :class="{ collapsed: folder.collapsed }"
+                             @click="toggleFolder(folder)">
+                            <span class="folder-arrow">▾</span>
+                            <span>{{ folder.isBuiltin ? '🗂' : '📁' }}</span>
+                            <span class="folder-name">{{ folder.name }}</span>
+                            <span class="folder-count">{{ folder.count }}</span>
+                            <div v-if="!folder.isBuiltin" class="folder-ops" @click.stop>
+                                <button class="folder-op-btn" title="上移" @click="moveFolder(folder, 'up')">↑</button>
+                                <button class="folder-op-btn" title="下移" @click="moveFolder(folder, 'down')">↓</button>
+                                <button class="folder-op-btn" title="重命名"
+                                        @click="openRenameFolderModal(folder)">✏️</button>
+                                <button class="folder-op-btn" title="删除"
+                                        @click="confirmDeleteFolder(folder)">🗑</button>
                             </div>
                         </div>
-                    </template>
+
+                        <div class="folder-sessions" :class="{ collapsed: folder.collapsed }">
+                            <div v-if="folder.cwdGroups.length === 0"
+                                 style="padding:4px 16px 8px 28px;font-size:12px;color:var(--sb-muted)">
+                                暂无 session
+                            </div>
+
+                            <div v-for="group in folder.cwdGroups" :key="group.key">
+                                <div class="cwd-header"
+                                     :class="{ collapsed: group.collapsed }"
+                                     :title="group.cwd || '未记录工作目录'"
+                                     @click="toggleCwdGroup(group)">
+                                    <span class="cwd-arrow">▾</span>
+                                    <div class="cwd-title">
+                                        <span class="cwd-name">{{ group.label }}</span>
+                                        <span class="cwd-path">{{ group.cwd || '未记录工作目录' }}</span>
+                                    </div>
+                                    <span class="cwd-count">{{ group.sessions.length }}</span>
+                                </div>
+
+                                <div class="cwd-sessions" :class="{ collapsed: group.collapsed }">
+                                    <div v-for="s in group.sessions" :key="s.id"
+                                         class="session-item"
+                                         :class="{ active: s.id === activeId }"
+                                         @click="selectSession(s.id)">
+                                        <div class="session-dot"></div>
+                                        <div class="session-body">
+                                            <div class="session-title">{{ s.title }}</div>
+                                            <div class="session-meta">
+                                                <div class="session-preview">{{ preview(s) }}</div>
+                                                <div class="session-time">{{ formatSessionTime(s.updatedAt) }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="session-ops" @click.stop>
+                                            <button class="session-more-btn"
+                                                    @click="openSessionMenu($event, s)">⋯</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </template>
             </div>
         </aside>
@@ -659,7 +881,8 @@
 
                     <!-- 消息气泡 -->
                     <div v-for="msg in curSession.messages" :key="msg.id"
-                         class="msg" :class="msg.role"
+                         class="msg" :class="[msg.role, { focused: searchFocusMessageId === msg.id }]"
+                         :data-message-id="msg.id"
                          @mouseleave="pendingDel === msg.id && (pendingDel = null)">
 
                         <!-- 悬停操作按钮（绝对定位在气泡内右上角）-->
@@ -744,6 +967,69 @@
             </div>
         </div>
     </div>
+
+    <div v-if="searchPanel.show" class="modal-overlay" @click.self="closeSearchModal">
+        <div class="search-modal">
+            <div class="search-modal-header">
+                <input ref="searchInputRef"
+                       v-model="searchQuery"
+                       class="search-modal-input"
+                       type="text"
+                       placeholder="搜索消息内容，支持模糊包含匹配"
+                       @keydown.enter.prevent="runSearchNow">
+                <button class="btn btn-primary" @click="runSearchNow">搜索</button>
+                <button class="btn" @click="closeSearchModal">关闭</button>
+            </div>
+
+            <div class="search-modal-body">
+                <div class="search-panel-list">
+                    <div v-if="searchPanel.loading" class="search-status">正在搜索消息内容...</div>
+                    <div v-else-if="searchPanel.error" class="search-status">{{ searchPanel.error }}</div>
+                    <div v-else-if="!searchQuery.trim()" class="search-status">输入关键词开始搜索，按 Ctrl+Shift+F 可快速打开。</div>
+                    <div v-else-if="searchPanel.items.length === 0" class="search-status">没有找到匹配项。</div>
+
+                    <button v-for="item in searchPanel.items"
+                            :key="item.sessionId"
+                            class="search-session-item"
+                            :class="{ active: activeSearchSession && activeSearchSession.sessionId === item.sessionId }"
+                            @click="searchPanel.activeSessionId = item.sessionId">
+                        <div class="search-session-head">
+                            <div class="search-session-title" v-html="highlightSearch(item.title, searchQuery)"></div>
+                            <div class="search-session-count">{{ item.matchCount }} 处</div>
+                        </div>
+                        <div class="search-session-cwd">{{ item.cwd || '未记录工作目录' }}</div>
+                        <div class="search-session-time">{{ formatFullTime(item.updatedAt) }}</div>
+                    </button>
+                </div>
+
+                <div class="search-panel-detail">
+                    <template v-if="activeSearchSession">
+                        <div class="search-detail-head">
+                            <h3>{{ activeSearchSession.title }}</h3>
+                            <div class="search-detail-meta">
+                                {{ activeSearchSession.matchCount }} 处匹配 · {{ activeSearchSession.cwd || '未记录工作目录' }}
+                            </div>
+                        </div>
+
+                        <div v-for="match in activeSearchSession.matches"
+                             :key="match.messageId"
+                             class="search-match">
+                            <div class="search-match-head">
+                                <div class="search-match-role">{{ match.role === 'user' ? '用户' : '助手' }}</div>
+                                <div class="search-match-time">{{ formatFullTime(match.timestamp) }}</div>
+                            </div>
+                            <div class="search-match-snippet" v-html="highlightSearch(match.snippet, searchQuery)"></div>
+                            <div class="search-match-content" v-html="highlightSearch(match.content, searchQuery)"></div>
+                            <div class="modal-footer">
+                                <button class="btn btn-primary" @click="jumpToSearchMatch(activeSearchSession, match)">打开 Session</button>
+                            </div>
+                        </div>
+                    </template>
+                    <div v-else class="search-status">左侧选择一个匹配项查看详情。</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -760,6 +1046,7 @@ createApp({
 
         // 文件夹折叠态仅存在前端（避免污染后端结构）
         const folderUi = reactive({ collapsed: {} })
+        const cwdUi = reactive({ collapsed: {} })
 
         // 简单 loading 状态
         const busy = reactive({ list: false, detail: false })
@@ -778,6 +1065,8 @@ createApp({
         const editTaRef     = ref(null)   // 编辑 textarea DOM 引用
         const pendingDel    = ref(null)   // 待确认删除的消息 id
         const msgWrap       = ref(null)   // 消息列表容器
+        const searchInputRef = ref(null)
+        const searchFocusMessageId = ref(null)
 
         // 下拉菜单状态
         const dd = reactive({ visible: false, x: 0, y: 0, items: [] })
@@ -792,6 +1081,13 @@ createApp({
         // 确认删除弹窗状态
         const confirm = reactive({ show: false, msg: '', onOk: null })
         const notice = reactive({ type: '', text: '' })
+        const searchPanel = reactive({
+            show: false,
+            loading: false,
+            error: '',
+            items: [],
+            activeSessionId: null,
+        })
 
         /* =============================================
            计算属性
@@ -811,10 +1107,79 @@ createApp({
         // sessions 列表由后端按 q 参数过滤；前端再兜底按更新时间倒序
         const visibleSessions = computed(() => sortSessionsByUpdatedAtDesc(sessions.value))
 
-        // 未分类的可见 sessions
-        const uncategorized = computed(() =>
-            visibleSessions.value.filter(s => !s.folderId)
-        )
+        const sortFoldersByIndex = (list) =>
+            (list || []).slice().sort((a, b) => {
+                const ia = Number(a && a.sortIndex) || 0
+                const ib = Number(b && b.sortIndex) || 0
+                return ia - ib
+            })
+
+        const folderTree = computed(() => {
+            const groups = []
+            const folderList = sortFoldersByIndex(folders.value)
+
+            const buildCwdGroups = (folderId, sourceSessions) => {
+                const map = new Map()
+                sourceSessions.forEach((session) => {
+                    const cwd = session.cwd || ''
+                    const key = `${folderId || '__uncategorized'}::${cwd || '__empty'}`
+                    if (!map.has(key)) {
+                        map.set(key, {
+                            key,
+                            cwd,
+                            label: cwdLabel(cwd),
+                            collapsed: !!cwdUi.collapsed[key],
+                            sessions: [],
+                            updatedAt: '',
+                        })
+                    }
+                    const group = map.get(key)
+                    group.sessions.push(session)
+                    if (!group.updatedAt || sessionUpdatedAtTs(session) > sessionUpdatedAtTs({ updatedAt: group.updatedAt })) {
+                        group.updatedAt = session.updatedAt || ''
+                    }
+                })
+                return Array.from(map.values())
+                    .map((group) => ({
+                        key: group.key,
+                        cwd: group.cwd,
+                        label: group.label,
+                        collapsed: !!cwdUi.collapsed[group.key],
+                        updatedAt: group.updatedAt,
+                        sessions: sortSessionsByUpdatedAtDesc(group.sessions),
+                    }))
+                    .sort((a, b) => sessionUpdatedAtTs({ updatedAt: b.updatedAt }) - sessionUpdatedAtTs({ updatedAt: a.updatedAt }))
+            }
+
+            folderList.forEach((folder) => {
+                const folderSessions = visibleSessions.value.filter((session) => session.folderId === folder.id)
+                groups.push({
+                    id: folder.id,
+                    name: folder.name,
+                    isBuiltin: false,
+                    collapsed: !!folder.collapsed,
+                    count: folderSessions.length,
+                    cwdGroups: buildCwdGroups(folder.id, folderSessions),
+                })
+            })
+
+            const uncategorizedSessions = visibleSessions.value.filter((session) => !session.folderId)
+            groups.push({
+                id: '__uncategorized',
+                name: '未分类',
+                isBuiltin: true,
+                collapsed: !!folderUi.collapsed.__uncategorized,
+                count: uncategorizedSessions.length,
+                cwdGroups: buildCwdGroups('', uncategorizedSessions),
+            })
+
+            return groups
+        })
+
+        const activeSearchSession = computed(() => {
+            const active = searchPanel.items.find((item) => item.sessionId === searchPanel.activeSessionId)
+            return active || searchPanel.items[0] || null
+        })
 
         /* =============================================
            工具函数
@@ -870,6 +1235,26 @@ createApp({
             }
         }
 
+        const sessionUpdatedAtTs = (session) =>
+            Date.parse((session && session.updatedAt) || '') || 0
+
+        const cwdLabel = (cwd) => {
+            if (!cwd) return '未记录工作目录'
+            const normalized = String(cwd).replace(/[\\/]+$/, '')
+            const parts = normalized.split(/[\\/]/)
+            return parts[parts.length - 1] || normalized
+        }
+
+        const escapeRegExp = (text) => String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+        const highlightSearch = (text, query) => {
+            const raw = toStr(text)
+            const escaped = escHtml(raw)
+            const q = toStr(query).trim()
+            if (!q) return escaped
+            return escaped.replace(new RegExp(escapeRegExp(q), 'gi'), (m) => `<mark>${m}</mark>`)
+        }
+
         const apiJson = async (url, options) => {
             const res = await fetch(url, {
                 headers: { 'Content-Type': 'application/json' },
@@ -910,6 +1295,7 @@ createApp({
             folders.value = list.map((f) => ({
                 id: f.id,
                 name: f.name,
+                sortIndex: f.sortIndex || 0,
                 collapsed: folderUi.collapsed[f.id] === undefined ? false : !!folderUi.collapsed[f.id],
             }))
         }
@@ -936,7 +1322,7 @@ createApp({
 
             // 自动选中第一个 session
             if (!activeId.value || !sessions.value.some(s => s.id === activeId.value)) {
-                activeId.value = sessions.value.length ? sessions.value[0].id : null
+                activeId.value = visibleSessions.value.length ? visibleSessions.value[0].id : null
             }
             if (activeId.value) {
                 await loadSessionDetail(activeId.value)
@@ -978,13 +1364,16 @@ createApp({
                 method: 'PATCH',
                 body: JSON.stringify(patch || {}),
             })
-            await loadSessions(searchQuery.value)
+            await loadSessions('')
         }
 
         const switchArchived = async (flag) => {
             if (showArchived.value === flag) return
             showArchived.value = flag
-            await loadSessions(searchQuery.value)
+            await loadSessions('')
+            if (searchPanel.show && searchQuery.value.trim()) {
+                await runSearchNow()
+            }
         }
 
         const resumeSession = async (session) => {
@@ -1007,7 +1396,7 @@ createApp({
                     method: 'POST',
                 })
                 showArchived.value = false
-                await loadSessions(searchQuery.value)
+                await loadSessions('')
                 if (cloned && cloned.id) {
                     activeId.value = cloned.id
                     await loadSessionDetail(cloned.id)
@@ -1036,7 +1425,7 @@ createApp({
                     method: 'POST',
                 })
                 showArchived.value = false
-                await loadSessions(searchQuery.value)
+                await loadSessions('')
                 if (branched && branched.id) {
                     activeId.value = branched.id
                     await loadSessionDetail(branched.id)
@@ -1047,17 +1436,7 @@ createApp({
             }
         }
 
-        // 搜索关键词高亮（返回带 <mark> 的 HTML 字符串）
-        const hl = (text) => {
-            const q = searchQuery.value.trim()
-            if (!q) return escHtml(text)
-            const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
-            return escHtml(text).replace(re, m => `<mark>${m}</mark>`)
-        }
-
-        // 获取某文件夹下的可见 sessions
-        const getFolderSessions = (fid) =>
-            visibleSessions.value.filter(s => s.folderId === fid)
+        const hl = (text) => escHtml(text)
 
         // 根据 id 查文件夹名称
         const folderName = (fid) =>
@@ -1078,13 +1457,109 @@ createApp({
             folderUi.collapsed[folder.id] = folder.collapsed
         }
 
+        const toggleCwdGroup = (group) => {
+            group.collapsed = !group.collapsed
+            cwdUi.collapsed[group.key] = group.collapsed
+        }
+
+        const moveFolder = async (folder, direction) => {
+            if (!folder || folder.isBuiltin) return
+            try {
+                await apiJson(`/api/codex/folders/${encodeURIComponent(folder.id)}/move?direction=${encodeURIComponent(direction)}`, {
+                    method: 'POST',
+                })
+                await loadFolders()
+            } catch (e) {
+                setNotice('error', '调整目录顺序失败：' + (e && e.message ? e.message : e))
+            }
+        }
+
+        const expandAllTree = () => {
+            folderTree.value.forEach((folder) => {
+                folderUi.collapsed[folder.id] = false
+                folder.cwdGroups.forEach((group) => {
+                    cwdUi.collapsed[group.key] = false
+                })
+            })
+        }
+
+        const collapseAllTree = () => {
+            folderTree.value.forEach((folder) => {
+                folderUi.collapsed[folder.id] = true
+                folder.cwdGroups.forEach((group) => {
+                    cwdUi.collapsed[group.key] = true
+                })
+            })
+        }
+
         // 选中 session
         const selectSession = async (id) => {
             activeId.value      = id
             editingMsgId.value  = null
             pendingDel.value    = null
             editingTitle.value  = false
+            searchFocusMessageId.value = null
             await loadSessionDetail(id)
+        }
+
+        const openSearchModal = () => {
+            searchPanel.show = true
+            searchPanel.error = ''
+            nextTick(() => searchInputRef.value?.focus())
+            if (searchQuery.value.trim()) {
+                runSearchNow()
+            }
+        }
+
+        const closeSearchModal = () => {
+            searchPanel.show = false
+        }
+
+        const runSearchNow = async () => {
+            const q = searchQuery.value.trim()
+            searchPanel.error = ''
+            if (!q) {
+                searchPanel.items = []
+                searchPanel.activeSessionId = null
+                return
+            }
+            searchPanel.loading = true
+            try {
+                const data = await apiJson(`/api/codex/search/messages?q=${encodeURIComponent(q)}&archived=${showArchived.value}`, {
+                    method: 'GET',
+                })
+                searchPanel.items = (data && data.items) || []
+                searchPanel.activeSessionId = searchPanel.items.length ? searchPanel.items[0].sessionId : null
+            } catch (e) {
+                searchPanel.error = e && e.message ? e.message : String(e)
+            } finally {
+                searchPanel.loading = false
+            }
+        }
+
+        const scrollToFocusedMessage = () => {
+            if (!searchFocusMessageId.value) return
+            const list = Array.from(document.querySelectorAll('[data-message-id]'))
+            const target = list.find((el) => el.getAttribute('data-message-id') === searchFocusMessageId.value)
+            if (target) {
+                target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                window.setTimeout(() => {
+                    if (searchFocusMessageId.value === target.getAttribute('data-message-id')) {
+                        searchFocusMessageId.value = null
+                    }
+                }, 3000)
+            }
+        }
+
+        const jumpToSearchMatch = async (sessionItem, match) => {
+            if (!sessionItem || !sessionItem.sessionId) return
+            closeSearchModal()
+            searchFocusMessageId.value = match && match.messageId ? match.messageId : null
+            activeId.value = sessionItem.sessionId
+            await loadSessions('')
+            activeId.value = sessionItem.sessionId
+            await loadSessionDetail(sessionItem.sessionId)
+            nextTick(() => scrollToFocusedMessage())
         }
 
         /* =============================================
@@ -1339,7 +1814,7 @@ createApp({
                 : `确定删除文件夹「${folder.name}」吗？`
             openConfirm(msg, () => {
                 apiJson(`/api/codex/folders/${encodeURIComponent(folder.id)}`, { method: 'DELETE' })
-                    .then(() => Promise.all([loadFolders(), loadSessions(searchQuery.value)]))
+                    .then(() => Promise.all([loadFolders(), loadSessions('')]))
                     .then(() => setNotice('success', '文件夹已删除'))
                     .catch((e) => setNotice('error', '删除文件夹失败：' + (e && e.message ? e.message : e)))
             })
@@ -1357,12 +1832,11 @@ createApp({
         })
 
         let searchTimer = null
-        watch(searchQuery, (val) => {
+        watch(searchQuery, () => {
+            if (!searchPanel.show) return
             if (searchTimer) clearTimeout(searchTimer)
             searchTimer = setTimeout(() => {
-                loadSessions(val).catch((e) => {
-                    console.error('search load failed', e)
-                })
+                runSearchNow()
             }, 250)
         })
 
@@ -1370,11 +1844,20 @@ createApp({
            全局键盘快捷键（ESC 关闭所有浮层）
            ============================================= */
         const onKeydown = (e) => {
+            const openSearch = (e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')
+            if (openSearch) {
+                e.preventDefault()
+                openSearchModal()
+                return
+            }
             if (e.key === 'Escape') {
                 closeDropdown()
                 modal.show    = false
                 confirm.show  = false
                 editingTitle.value = false
+                if (searchPanel.show) {
+                    closeSearchModal()
+                }
             }
         }
         onMounted(() => document.addEventListener('keydown', onKeydown))
@@ -1390,14 +1873,14 @@ createApp({
             activeId, searchQuery, showArchived,
             editingTitle, titleDraft, titleRef,
             editingMsgId, editDraft, editTaRef,
-            pendingDel, msgWrap,
-            dd, modal, confirm, notice, busy,
+            pendingDel, msgWrap, searchInputRef, searchFocusMessageId,
+            dd, modal, confirm, notice, busy, searchPanel,
             // 计算属性
-            curSession, visibleSessions, uncategorized,
+            curSession, visibleSessions, folderTree, activeSearchSession,
             // 工具
-            hl, getFolderSessions, folderName, preview, clearNotice, formatSessionTime, formatFullTime,
+            hl, folderName, preview, clearNotice, formatSessionTime, formatFullTime, highlightSearch,
             // 侧边栏
-            toggleFolder, selectSession, switchArchived,
+            toggleFolder, toggleCwdGroup, moveFolder, expandAllTree, collapseAllTree, selectSession, switchArchived, openSearchModal, closeSearchModal, runSearchNow, jumpToSearchMatch,
             // 标题编辑
             startEditTitle, saveTitle,
             // 消息
