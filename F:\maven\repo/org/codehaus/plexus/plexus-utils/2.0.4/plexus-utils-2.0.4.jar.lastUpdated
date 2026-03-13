@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 12 23:41:33 CST 2026
+@default-jfrog-https\://repo.yyrd.com/artifactory/yonyou-public/.lastUpdated=1773330064976
+https\://repo.maven.apache.org/maven2/.lastUpdated=1773330093653
+https\://repo.yyrd.com/artifactory/yonyou-public/.error=Could not transfer artifact org.codehaus.plexus\:plexus-utils\:jar\:2.0.4 from/to jfrog (https\://repo.yyrd.com/artifactory/yonyou-public/)\: Connect to repo.yyrd.com\:443 [repo.yyrd.com/172.20.60.211] failed\: Connect timed out

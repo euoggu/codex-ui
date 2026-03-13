@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 12 21:21:49 CST 2026
+@default-jfrog-https\://repo.yyrd.com/artifactory/yonyou-public/.lastUpdated=1773321709719
+https\://repo.maven.apache.org/maven2/.lastUpdated=1773321709966
+https\://repo.yyrd.com/artifactory/yonyou-public/.error=Could not transfer artifact org.springframework.integration\:spring-integration-bom\:pom\:5.5.8 from/to jfrog (https\://repo.yyrd.com/artifactory/yonyou-public/)\: Connect to repo.yyrd.com\:443 [repo.yyrd.com/172.20.60.211] failed\: Connect timed out

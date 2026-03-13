@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 12 21:20:27 CST 2026
+@default-jfrog-https\://repo.yyrd.com/artifactory/yonyou-public/.lastUpdated=1773321626987
+https\://repo.maven.apache.org/maven2/.lastUpdated=1773321627278
+https\://repo.yyrd.com/artifactory/yonyou-public/.error=Could not transfer artifact io.prometheus\:simpleclient_bom\:pom\:0.12.0 from/to jfrog (https\://repo.yyrd.com/artifactory/yonyou-public/)\: Connect to repo.yyrd.com\:443 [repo.yyrd.com/172.20.60.211] failed\: Connect timed out

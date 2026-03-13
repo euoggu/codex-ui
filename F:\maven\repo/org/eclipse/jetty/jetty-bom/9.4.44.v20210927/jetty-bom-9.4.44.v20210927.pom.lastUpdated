@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 12 21:18:34 CST 2026
+@default-jfrog-https\://repo.yyrd.com/artifactory/yonyou-public/.lastUpdated=1773321513699
+https\://repo.maven.apache.org/maven2/.lastUpdated=1773321514031
+https\://repo.yyrd.com/artifactory/yonyou-public/.error=Could not transfer artifact org.eclipse.jetty\:jetty-bom\:pom\:9.4.44.v20210927 from/to jfrog (https\://repo.yyrd.com/artifactory/yonyou-public/)\: Connect to repo.yyrd.com\:443 [repo.yyrd.com/172.20.60.211] failed\: Connect timed out

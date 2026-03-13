@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 12 21:39:15 CST 2026
+@default-jfrog-https\://repo.yyrd.com/artifactory/yonyou-public/.lastUpdated=1773322755277
+https\://repo.maven.apache.org/maven2/.lastUpdated=1773322755433
+https\://repo.yyrd.com/artifactory/yonyou-public/.error=Could not transfer artifact org.eclipse.ee4j\:project\:pom\:1.0.5 from/to jfrog (https\://repo.yyrd.com/artifactory/yonyou-public/)\: Connection reset

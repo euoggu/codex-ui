@@ -1,6 +1,1421 @@
-<html>
-    <body>
-        <h1>hello word!!!</h1>
-        <p>this is a html page</p>
-    </body>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex Sessions</title>
+    <!-- Vue 3 CDN，单页面无需构建工程 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        /* ===== 全局重置 & CSS 变量 ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #f0f2f5;
+            /* 深色侧边栏 */
+            --sb-bg: #1e1e2e;
+            --sb-text: #cdd6f4;
+            --sb-muted: #6c7086;
+            --sb-hover: #313244;
+            --sb-active: #45475a;
+            --sb-border: #313244;
+            --sb-purple: #cba6f7;
+            /* 内容区 */
+            --panel: #ffffff;
+            --line: #e5e7eb;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #2563eb;
+            --accent-soft: #eff6ff;
+            --accent-border: #bfdbfe;
+            --danger: #dc2626;
+            --danger-soft: #fef2f2;
+            --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+        }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== 整体布局 ===== */
+        .app { display: flex; height: 100vh; }
+
+        /* ===== 侧边栏 ===== */
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            background: var(--sb-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 13px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid var(--sb-border);
+            flex-shrink: 0;
+        }
+        .logo {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--sb-purple);
+            flex: 1;
+            letter-spacing: .4px;
+        }
+        /* 小图标按钮 */
+        .icon-btn {
+            width: 26px; height: 26px;
+            border: none;
+            background: var(--sb-hover);
+            color: var(--sb-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            transition: background .15s, color .15s;
+        }
+        .icon-btn:hover { background: var(--sb-active); color: var(--sb-text); }
+
+        /* 搜索栏 */
+        .sidebar-search {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--sb-border);
+            flex-shrink: 0;
+        }
+        .search-wrap { position: relative; display: flex; align-items: center; }
+        .search-icon {
+            position: absolute; left: 9px;
+            color: var(--sb-muted); font-size: 13px; pointer-events: none;
+        }
+        .search-input {
+            width: 100%;
+            padding: 7px 28px 7px 30px;
+            background: var(--sb-hover);
+            border: 1px solid var(--sb-border);
+            border-radius: 7px;
+            color: var(--sb-text);
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color .15s;
+        }
+        .search-input::placeholder { color: var(--sb-muted); }
+        .search-input:focus { border-color: #7c3aed; }
+        .search-clear {
+            position: absolute; right: 8px;
+            background: none; border: none;
+            color: var(--sb-muted); cursor: pointer;
+            font-size: 13px; line-height: 1; padding: 2px;
+        }
+        .search-clear:hover { color: var(--sb-text); }
+
+        .sidebar-toolbar {
+            padding: 8px 12px 10px;
+            border-bottom: 1px solid var(--sb-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .segmented {
+            display: inline-flex;
+            background: var(--sb-hover);
+            border: 1px solid var(--sb-border);
+            border-radius: 8px;
+            padding: 2px;
+        }
+        .seg-btn {
+            border: none;
+            background: transparent;
+            color: var(--sb-muted);
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .seg-btn.active {
+            background: var(--sb-active);
+            color: var(--sb-text);
+        }
+        .side-hint {
+            color: var(--sb-muted);
+            font-size: 11px;
+        }
+
+        /* session 树 */
+        .session-tree { flex: 1; overflow-y: auto; padding: 6px 0; }
+        .session-tree::-webkit-scrollbar { width: 4px; }
+        .session-tree::-webkit-scrollbar-thumb { background: var(--sb-active); border-radius: 2px; }
+
+        /* 文件夹标题行 */
+        .folder-header {
+            display: flex; align-items: center; gap: 5px;
+            padding: 5px 12px 5px 10px;
+            cursor: pointer;
+            color: var(--sb-muted);
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .6px;
+        }
+        .folder-header:hover { color: var(--sb-text); }
+        .folder-arrow { font-size: 9px; transition: transform .15s; width: 12px; text-align: center; }
+        .folder-header.collapsed .folder-arrow { transform: rotate(-90deg); }
+        .folder-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* 文件夹操作按钮，悬停显示 */
+        .folder-ops { display: none; gap: 2px; }
+        .folder-header:hover .folder-ops { display: flex; }
+        .folder-op-btn {
+            background: none; border: none;
+            color: var(--sb-muted); cursor: pointer;
+            font-size: 12px; padding: 2px 4px; border-radius: 4px;
+        }
+        .folder-op-btn:hover { background: var(--sb-active); color: var(--sb-text); }
+        .folder-sessions.collapsed { display: none; }
+
+        /* session 条目 */
+        .session-item {
+            display: flex; align-items: flex-start;
+            padding: 7px 12px 7px 26px;
+            cursor: pointer; gap: 7px;
+            transition: background .1s;
+        }
+        .session-item.top-level { padding-left: 14px; }
+        .session-item:hover { background: var(--sb-hover); }
+        .session-item.active { background: var(--sb-active); }
+        .session-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%; background: var(--sb-muted);
+            flex-shrink: 0; margin-top: 6px;
+        }
+        .session-item.active .session-dot { background: var(--sb-purple); }
+        .session-body { flex: 1; min-width: 0; }
+        .session-title {
+            font-size: 13px; color: var(--sb-text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;
+        }
+        .session-item.active .session-title { color: var(--sb-purple); font-weight: 600; }
+        .session-preview {
+            font-size: 11px; color: var(--sb-muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
+        }
+        .session-meta {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .session-meta .session-preview {
+            flex: 1;
+            min-width: 0;
+            margin-top: 0;
+        }
+        .session-time {
+            font-size: 11px;
+            color: var(--sb-muted);
+            white-space: nowrap;
+        }
+        /* session 操作按钮，悬停显示 */
+        .session-ops { display: none; }
+        .session-item:hover .session-ops { display: block; }
+        .session-more-btn {
+            background: none; border: none;
+            color: var(--sb-muted); cursor: pointer;
+            font-size: 16px; padding: 0 4px; border-radius: 4px; line-height: 1.2;
+        }
+        .session-more-btn:hover { background: var(--sb-active); color: var(--sb-text); }
+
+        .uncategorized-label {
+            padding: 8px 12px 4px;
+            color: var(--sb-muted);
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .6px;
+        }
+        .no-results {
+            padding: 32px 16px; text-align: center;
+            color: var(--sb-muted); font-size: 13px;
+        }
+
+        /* ===== 主内容区 ===== */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .main-header {
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+            padding: 14px 24px;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 16px;
+            flex-shrink: 0; min-height: 68px;
+        }
+        .title-area { flex: 1; min-width: 0; }
+        /* 可点击的标题，点击内联重命名 */
+        .session-name {
+            font-size: 17px; font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+            cursor: pointer; width: fit-content; margin-bottom: 3px;
+        }
+        .session-name:hover .pencil { opacity: 1; }
+        .pencil { opacity: 0; font-size: 13px; font-weight: 400; color: var(--muted); transition: opacity .15s; }
+        .title-input {
+            font-size: 17px; font-weight: 600;
+            border: none; border-bottom: 2px solid var(--accent);
+            outline: none; font-family: inherit;
+            background: transparent; min-width: 200px; margin-bottom: 3px;
+        }
+        .breadcrumb {
+            font-size: 12px; color: var(--muted);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .session-cwd {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .session-cwd code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background: #f3f4f6;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 2px 6px;
+            color: #374151;
+        }
+        .header-btns { display: flex; align-items: center; gap: 8px; }
+
+        /* 通用按钮 */
+        .btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 6px 14px; border-radius: 7px;
+            font-size: 13px; font-weight: 500; cursor: pointer;
+            border: 1px solid var(--line); background: var(--panel); color: var(--text);
+            transition: background .12s, border-color .12s;
+            white-space: nowrap; font-family: inherit;
+        }
+        .btn:hover { background: #f9fafb; border-color: #d1d5db; }
+        .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+        .btn-danger { color: var(--danger); }
+        .btn-danger:hover { background: var(--danger-soft); border-color: #fca5a5; }
+
+        /* ===== 消息区域 ===== */
+        .messages-wrap {
+            flex: 1; overflow-y: auto;
+            padding: 20px 24px 32px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .messages-wrap::-webkit-scrollbar { width: 6px; }
+        .messages-wrap::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+        /* 消息气泡 */
+        .msg { position: relative; width: fit-content; max-width: min(700px, 85%); }
+        .msg.user { align-self: flex-end; }
+        .msg.assistant { align-self: flex-start; }
+        .bubble {
+            padding: 10px 14px; border-radius: 12px;
+            border: 1px solid var(--line); background: var(--panel);
+            box-shadow: 0 1px 2px rgba(0,0,0,.06);
+        }
+        .msg.user .bubble {
+            background: var(--accent-soft); border-color: var(--accent-border);
+            border-radius: 12px 12px 4px 12px;
+        }
+        .msg.assistant .bubble { border-radius: 12px 12px 12px 4px; }
+        .msg-header {
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 10px; margin-bottom: 6px;
+        }
+        .role-badge {
+            font-size: 11px; font-weight: 600;
+            padding: 1px 7px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: .3px;
+        }
+        .msg.user .role-badge { background: #dbeafe; color: #1d4ed8; }
+        .msg.assistant .role-badge { background: #f3f4f6; color: #374151; }
+        .msg-time { font-size: 11px; color: var(--muted); }
+        .msg-content {
+            font-size: 14px; line-height: 1.75;
+            white-space: pre-wrap; word-break: break-word;
+        }
+
+        /* 消息操作按钮（悬停时显示，在气泡内部右上角）*/
+        .msg-actions {
+            position: absolute; top: 8px; right: 10px;
+            display: none; gap: 2px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 7px; padding: 3px 5px;
+            box-shadow: var(--shadow-md); z-index: 10;
+        }
+        .msg.assistant .msg-actions { right: auto; left: 10px; }
+        .msg:hover .msg-actions { display: flex; }
+        .act-btn {
+            background: none; border: none;
+            font-size: 12px; padding: 3px 8px; border-radius: 5px;
+            cursor: pointer; color: var(--muted);
+            transition: all .1s; white-space: nowrap; font-family: inherit;
+        }
+        .act-btn:hover { background: #f3f4f6; color: var(--text); }
+        .act-btn.danger:hover { background: var(--danger-soft); color: var(--danger); }
+        .act-btn.confirming { color: var(--danger); font-weight: 600; }
+
+        /* 内联编辑 */
+        .edit-ta {
+            width: 100%; min-width: 320px;
+            padding: 8px 10px; border: 1.5px solid var(--accent);
+            border-radius: 8px; font-size: 14px; line-height: 1.75;
+            resize: vertical; outline: none; font-family: inherit; background: #fff;
+        }
+        .edit-footer {
+            display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end;
+        }
+
+        /* 空状态 */
+        .empty-msgs {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: var(--muted); gap: 8px;
+        }
+        .empty-icon { font-size: 40px; margin-bottom: 4px; }
+        .empty-title { font-size: 16px; font-weight: 600; color: var(--text); }
+        .empty-desc { font-size: 13px; }
+        .no-session {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: var(--muted); gap: 10px;
+        }
+        .no-session .big-icon { font-size: 54px; }
+        .no-session .tip { font-size: 15px; font-weight: 500; color: var(--text); }
+        .no-session .sub { font-size: 13px; }
+
+        /* ===== 下拉菜单 ===== */
+        .dropdown {
+            position: fixed;
+            background: var(--panel); border: 1px solid var(--line);
+            border-radius: 10px; box-shadow: var(--shadow-lg);
+            padding: 4px; z-index: 300; min-width: 160px;
+        }
+        .dd-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 12px; border-radius: 6px;
+            font-size: 13px; cursor: pointer;
+            color: var(--text); border: none;
+            background: none; width: 100%; text-align: left; font-family: inherit;
+        }
+        .dd-item:hover { background: #f3f4f6; }
+        .dd-item.danger { color: var(--danger); }
+        .dd-item.danger:hover { background: var(--danger-soft); }
+        .dd-sep { height: 1px; background: var(--line); margin: 4px 2px; }
+
+        /* ===== 弹窗 ===== */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.45);
+            display: flex; align-items: center; justify-content: center; z-index: 400;
+        }
+        .modal {
+            background: var(--panel); border-radius: 14px;
+            padding: 24px; width: 380px; box-shadow: var(--shadow-lg);
+        }
+        .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+        .modal-msg { font-size: 14px; line-height: 1.6; color: var(--text); margin-bottom: 20px; }
+        .field { margin-bottom: 14px; }
+        .field-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; display: block; }
+        .field-input, .field-select {
+            width: 100%; padding: 8px 12px;
+            border: 1px solid var(--line); border-radius: 8px;
+            font-size: 14px; outline: none; font-family: inherit;
+            background: var(--panel); color: var(--text);
+        }
+        .field-input:focus, .field-select:focus { border-color: var(--accent); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+        /* 搜索高亮 */
+        mark { background: #fef08a; border-radius: 2px; padding: 0 1px; }
+
+        .notice {
+            margin: 12px 24px 0;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid var(--line);
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .notice.success {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+        .notice.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+        .notice.info {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+        .notice-close {
+            border: none;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            font-size: 15px;
+            line-height: 1;
+        }
+        .loading-hint {
+            color: var(--muted);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<!-- Vue 挂载点 -->
+<div id="app">
+    <!-- 点击空白区域关闭下拉 -->
+    <div class="app" @click="closeDropdown">
+
+        <!-- ===== 左侧侧边栏 ===== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="logo">⚡ Codex</span>
+                <!-- 新建文件夹 -->
+                <button class="icon-btn" title="新建文件夹" @click.stop="openNewFolderModal">📁</button>
+                <!-- 新建 Session：当前只读 Codex 原始 session，这里先保留入口提示 -->
+                <button class="icon-btn" title="新建 Session" style="font-size:18px;font-weight:700;"
+                        @click.stop="openNewSessionModal">+</button>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="sidebar-search">
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input v-model="searchQuery" type="text" class="search-input"
+                           placeholder="搜索 session、消息内容…">
+                    <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">✕</button>
+                </div>
+            </div>
+
+            <div class="sidebar-toolbar">
+                <div class="segmented">
+                    <button class="seg-btn" :class="{ active: !showArchived }" @click="switchArchived(false)">活动</button>
+                    <button class="seg-btn" :class="{ active: showArchived }" @click="switchArchived(true)">归档</button>
+                </div>
+                <span class="side-hint">{{ busy.list ? '加载中...' : (visibleSessions.length + ' 项') }}</span>
+            </div>
+
+            <!-- Session 树 -->
+            <div class="session-tree">
+                <!-- 无搜索结果 -->
+                <div v-if="searchQuery && visibleSessions.length === 0" class="no-results">
+                    未找到「{{ searchQuery }}」相关内容
+                </div>
+
+                <template v-else>
+                    <!-- 各文件夹 -->
+                    <div v-for="folder in folders" :key="folder.id">
+                        <!-- 搜索时过滤掉空文件夹 -->
+                        <template v-if="!searchQuery || getFolderSessions(folder.id).length > 0">
+                            <!-- 文件夹标题行 -->
+                            <div class="folder-header"
+                                 :class="{ collapsed: !searchQuery && folder.collapsed }"
+                                 @click="!searchQuery && toggleFolder(folder)">
+                                <span class="folder-arrow">▾</span>
+                                <span>📁</span>
+                                <!-- v-html 用于显示搜索高亮 -->
+                                <span class="folder-name" v-html="hl(folder.name)"></span>
+                                <div class="folder-ops" @click.stop>
+                                    <button class="folder-op-btn" title="重命名"
+                                            @click="openRenameFolderModal(folder)">✏️</button>
+                                    <button class="folder-op-btn" title="删除"
+                                            @click="confirmDeleteFolder(folder)">🗑</button>
+                                </div>
+                            </div>
+                            <!-- 文件夹下的 sessions -->
+                            <div class="folder-sessions"
+                                 :class="{ collapsed: !searchQuery && folder.collapsed }">
+                                <div v-if="getFolderSessions(folder.id).length === 0"
+                                     style="padding:4px 16px 8px 28px;font-size:12px;color:var(--sb-muted)">
+                                    暂无 session
+                                </div>
+                                <div v-for="s in getFolderSessions(folder.id)" :key="s.id"
+                                     class="session-item"
+                                     :class="{ active: s.id === activeId }"
+                                     @click="selectSession(s.id)">
+                                    <div class="session-dot"></div>
+                                    <div class="session-body">
+                                        <div class="session-title" v-html="hl(s.title)"></div>
+                                        <div class="session-meta">
+                                            <div class="session-preview">{{ preview(s) }}</div>
+                                            <div class="session-time">{{ formatSessionTime(s.updatedAt) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="session-ops" @click.stop>
+                                        <button class="session-more-btn"
+                                                @click="openSessionMenu($event, s)">⋯</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 未分类 sessions -->
+                    <template v-if="uncategorized.length > 0">
+                        <div class="uncategorized-label">未分类</div>
+                        <div v-for="s in uncategorized" :key="s.id"
+                             class="session-item top-level"
+                             :class="{ active: s.id === activeId }"
+                             @click="selectSession(s.id)">
+                            <div class="session-dot"></div>
+                            <div class="session-body">
+                                <div class="session-title" v-html="hl(s.title)"></div>
+                                <div class="session-meta">
+                                    <div class="session-preview">{{ preview(s) }}</div>
+                                    <div class="session-time">{{ formatSessionTime(s.updatedAt) }}</div>
+                                </div>
+                            </div>
+                            <div class="session-ops" @click.stop>
+                                <button class="session-more-btn"
+                                        @click="openSessionMenu($event, s)">⋯</button>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </aside>
+
+        <!-- ===== 右侧主内容区 ===== -->
+        <main class="main">
+            <div v-if="notice.text" class="notice" :class="notice.type">
+                <span>{{ notice.text }}</span>
+                <button class="notice-close" @click="clearNotice">✕</button>
+            </div>
+
+            <!-- 未选中 session 时的占位 -->
+            <div v-if="!curSession" class="no-session">
+                <div class="big-icon">💬</div>
+                <div class="tip">选择或新建一个 Session</div>
+                <div class="sub">在左侧选择 Session 开始管理消息内容</div>
+            </div>
+
+            <template v-else>
+                <!-- 顶部标题栏 -->
+                <div class="main-header">
+                    <div class="title-area">
+                        <!-- 内联重命名：点击标题进入编辑 -->
+                        <div v-if="!editingTitle" class="session-name" @click="startEditTitle">
+                            {{ curSession.title }}
+                            <span class="pencil">✏️</span>
+                        </div>
+                        <input v-else ref="titleRef" v-model="titleDraft" class="title-input"
+                               @blur="saveTitle"
+                               @keydown.enter.prevent="saveTitle"
+                               @keydown.esc="editingTitle = false">
+                        <!-- 路径面包屑 -->
+                        <div class="breadcrumb">
+                            <template v-if="curSession.folderId">
+                                <span>📁 {{ folderName(curSession.folderId) }}</span>
+                                <span>›</span>
+                            </template>
+                            <span>{{ curSession.messages.length }} 条消息</span>
+                            <span>·</span>
+                            <span>{{ formatFullTime(curSession.updatedAt) }}</span>
+                        </div>
+                        <div class="session-cwd" :title="curSession.cwd || ''">
+                            工作目录：<code>{{ curSession.cwd || '未提供' }}</code>
+                        </div>
+                    </div>
+                    <div class="header-btns">
+                        <span v-if="busy.detail" class="loading-hint">消息加载中...</span>
+                        <button class="btn" @click="resumeSession(curSession)">恢复到 iTerm2</button>
+                        <button class="btn" @click="cloneSession(curSession)">克隆 Session</button>
+                        <button class="btn btn-primary" @click="openAddMsgModal">+ 添加消息</button>
+                        <button class="btn btn-danger" @click="toggleArchiveSession(curSession)">
+                            {{ curSession.archived ? '取消归档' : '归档 Session' }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 消息列表 -->
+                <div class="messages-wrap" ref="msgWrap">
+                    <div v-if="busy.detail" class="loading-hint">正在加载聊天记录...</div>
+
+                    <!-- 空消息占位 -->
+                    <div v-if="!busy.detail && curSession.messages.length === 0" class="empty-msgs">
+                        <div class="empty-icon">🗒️</div>
+                        <div class="empty-title">暂无消息</div>
+                        <div class="empty-desc">点击右上角「+ 添加消息」开始录入</div>
+                    </div>
+
+                    <!-- 消息气泡 -->
+                    <div v-for="msg in curSession.messages" :key="msg.id"
+                         class="msg" :class="msg.role"
+                         @mouseleave="pendingDel === msg.id && (pendingDel = null)">
+
+                        <!-- 悬停操作按钮（绝对定位在气泡内右上角）-->
+                        <div class="msg-actions">
+                            <button class="act-btn" @click="startEditMsg(msg)">编辑</button>
+                            <button class="act-btn" @click="branchFromHere(msg)">从此处分支</button>
+                            <button class="act-btn danger"
+                                    :class="{ confirming: pendingDel === msg.id }"
+                                    @click="deleteMsg(msg)">
+                                {{ pendingDel === msg.id ? '确认删除？' : '删除' }}
+                            </button>
+                        </div>
+
+                        <div class="bubble">
+                            <div class="msg-header">
+                                <span class="role-badge">{{ msg.role === 'user' ? '用户' : '助手' }}</span>
+                                <span class="msg-time">{{ msg.time }}</span>
+                            </div>
+                            <!-- 编辑状态：显示 textarea -->
+                            <template v-if="editingMsgId === msg.id">
+                                <textarea class="edit-ta" v-model="editDraft" rows="4"
+                                          ref="editTaRef"></textarea>
+                                <div class="edit-footer">
+                                    <button class="btn" @click="editingMsgId = null">取消</button>
+                                    <button class="btn btn-primary" @click="saveEditMsg(msg)">保存</button>
+                                </div>
+                            </template>
+                            <!-- 正常显示 -->
+                            <div v-else class="msg-content">{{ msg.content }}</div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </main>
+    </div>
+
+    <!-- ===== 下拉菜单 ===== -->
+    <div v-if="dd.visible" class="dropdown"
+         :style="{ left: dd.x + 'px', top: dd.y + 'px' }"
+         @click.stop>
+        <template v-for="(item, i) in dd.items" :key="i">
+            <div v-if="item.sep" class="dd-sep"></div>
+            <button v-else class="dd-item" :class="{ danger: item.danger }"
+                    @click="runDdItem(item)">{{ item.label }}</button>
+        </template>
+    </div>
+
+    <!-- ===== 通用字段弹窗 ===== -->
+    <div v-if="modal.show" class="modal-overlay" @click.self="modal.show = false">
+        <div class="modal">
+            <h3>{{ modal.title }}</h3>
+            <div v-for="f in modal.fields" :key="f.key" class="field">
+                <label class="field-label">{{ f.label }}</label>
+                <!-- 单行文本 -->
+                <input v-if="f.type === 'text'" class="field-input" v-model="modal.vals[f.key]"
+                       type="text" :placeholder="f.label"
+                       @keydown.enter="confirmModal" @keydown.esc="modal.show = false">
+                <!-- 下拉选择 -->
+                <select v-else-if="f.type === 'select'" class="field-select" v-model="modal.vals[f.key]">
+                    <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+                <!-- 多行文本 -->
+                <textarea v-else-if="f.type === 'textarea'" class="field-input"
+                          v-model="modal.vals[f.key]" rows="4"
+                          :placeholder="f.label" style="resize:vertical;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" @click="modal.show = false">取消</button>
+                <button class="btn btn-primary" @click="confirmModal">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 确认弹窗 ===== -->
+    <div v-if="confirm.show" class="modal-overlay" @click.self="confirm.show = false">
+        <div class="modal">
+            <h3>⚠️ 确认操作</h3>
+            <p class="modal-msg">{{ confirm.msg }}</p>
+            <div class="modal-footer">
+                <button class="btn" @click="confirm.show = false">取消</button>
+                <button class="btn btn-danger" @click="doConfirm">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, reactive, computed, nextTick, onMounted, onUnmounted, watch } = Vue
+
+createApp({
+    setup() {
+        /* =============================================
+           数据
+           ============================================= */
+        // 来自后端 API
+        const folders = ref([])   // {id, name, collapsed}
+        const sessions = ref([])  // {id, title, folderId, updatedAt, preview, archived, messages?}
+
+        // 文件夹折叠态仅存在前端（避免污染后端结构）
+        const folderUi = reactive({ collapsed: {} })
+
+        // 简单 loading 状态
+        const busy = reactive({ list: false, detail: false })
+
+        /* =============================================
+           UI 状态
+           ============================================= */
+        const activeId      = ref(null)   // 当前选中的 session id
+        const searchQuery   = ref('')     // 搜索词
+        const showArchived  = ref(false)  // 是否查看归档
+        const editingTitle  = ref(false)  // 是否在内联编辑标题
+        const titleDraft    = ref('')     // 标题草稿
+        const titleRef      = ref(null)   // 标题 input DOM 引用
+        const editingMsgId  = ref(null)   // 正在编辑的消息 id
+        const editDraft     = ref('')     // 消息编辑草稿
+        const editTaRef     = ref(null)   // 编辑 textarea DOM 引用
+        const pendingDel    = ref(null)   // 待确认删除的消息 id
+        const msgWrap       = ref(null)   // 消息列表容器
+
+        // 下拉菜单状态
+        const dd = reactive({ visible: false, x: 0, y: 0, items: [] })
+
+        // 通用字段弹窗状态
+        const modal = reactive({
+            show: false, title: '',
+            fields: [], vals: {},
+            onOk: null,
+        })
+
+        // 确认删除弹窗状态
+        const confirm = reactive({ show: false, msg: '', onOk: null })
+        const notice = reactive({ type: '', text: '' })
+
+        /* =============================================
+           计算属性
+           ============================================= */
+        // 当前选中的 session 对象
+        const curSession = computed(() =>
+            sessions.value.find(s => s.id === activeId.value) ?? null
+        )
+
+        const sortSessionsByUpdatedAtDesc = (list) =>
+            (list || []).slice().sort((a, b) => {
+                const ta = Date.parse((a && a.updatedAt) || '') || 0
+                const tb = Date.parse((b && b.updatedAt) || '') || 0
+                return tb - ta
+            })
+
+        // sessions 列表由后端按 q 参数过滤；前端再兜底按更新时间倒序
+        const visibleSessions = computed(() => sortSessionsByUpdatedAtDesc(sessions.value))
+
+        // 未分类的可见 sessions
+        const uncategorized = computed(() =>
+            visibleSessions.value.filter(s => !s.folderId)
+        )
+
+        /* =============================================
+           工具函数
+           ============================================= */
+        const toStr = (v) => (v === null || v === undefined) ? '' : String(v)
+
+        // HTML 转义（防 XSS）
+        const escHtml  = (s) => toStr(s)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+
+        const timeFromIso = (iso) => {
+            try {
+                const d = new Date(iso)
+                if (Number.isNaN(d.getTime())) return ''
+                return d.toTimeString().slice(0, 5)
+            } catch (e) {
+                return ''
+            }
+        }
+
+        const formatSessionTime = (iso) => {
+            try {
+                if (!iso) return ''
+                const d = new Date(iso)
+                if (Number.isNaN(d.getTime())) return iso
+                const mm = String(d.getMonth() + 1).padStart(2, '0')
+                const dd = String(d.getDate()).padStart(2, '0')
+                const hh = String(d.getHours()).padStart(2, '0')
+                const mi = String(d.getMinutes()).padStart(2, '0')
+                return `${mm}-${dd} ${hh}:${mi}`
+            } catch (e) {
+                return iso || ''
+            }
+        }
+
+        const formatFullTime = (iso) => {
+            try {
+                if (!iso) return ''
+                const d = new Date(iso)
+                if (Number.isNaN(d.getTime())) return iso
+                const yyyy = d.getFullYear()
+                const mm = String(d.getMonth() + 1).padStart(2, '0')
+                const dd = String(d.getDate()).padStart(2, '0')
+                const hh = String(d.getHours()).padStart(2, '0')
+                const mi = String(d.getMinutes()).padStart(2, '0')
+                const ss = String(d.getSeconds()).padStart(2, '0')
+                return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`
+            } catch (e) {
+                return iso || ''
+            }
+        }
+
+        const apiJson = async (url, options) => {
+            const res = await fetch(url, {
+                headers: { 'Content-Type': 'application/json' },
+                ...options,
+            })
+            if (!res.ok) {
+                let message = `${res.status} ${res.statusText}`
+                try {
+                    const data = await res.json()
+                    if (data && data.message) {
+                        message = data.message
+                    }
+                } catch (e) {
+                    const text = await res.text().catch(() => '')
+                    if (text) {
+                        message = text
+                    }
+                }
+                throw new Error(message)
+            }
+            const ct = res.headers.get('content-type') || ''
+            if (ct.includes('application/json')) return await res.json()
+            return null
+        }
+
+        const setNotice = (type, text) => {
+            notice.type = type
+            notice.text = text
+        }
+
+        const clearNotice = () => {
+            notice.type = ''
+            notice.text = ''
+        }
+
+        const loadFolders = async () => {
+            const list = await apiJson('/api/codex/folders', { method: 'GET' }) || []
+            folders.value = list.map((f) => ({
+                id: f.id,
+                name: f.name,
+                collapsed: folderUi.collapsed[f.id] === undefined ? false : !!folderUi.collapsed[f.id],
+            }))
+        }
+
+        const loadSessions = async (q) => {
+            const query = (q || '').trim()
+            busy.list = true
+            try {
+                const data = await apiJson(`/api/codex/sessions?limit=200&archived=${showArchived.value}&q=${encodeURIComponent(query)}`, { method: 'GET' })
+                const items = (data && data.items) ? data.items : []
+                sessions.value = items.map((s) => ({
+                    id: s.id,
+                    title: s.title,
+                    cwd: s.cwd || '',
+                    folderId: s.folderId || null,
+                    updatedAt: s.updatedAt,
+                    preview: s.preview,
+                    archived: !!s.archived,
+                    messages: [], // 详情加载后填充
+                }))
+            } finally {
+                busy.list = false
+            }
+
+            // 自动选中第一个 session
+            if (!activeId.value || !sessions.value.some(s => s.id === activeId.value)) {
+                activeId.value = sessions.value.length ? sessions.value[0].id : null
+            }
+            if (activeId.value) {
+                await loadSessionDetail(activeId.value)
+            }
+        }
+
+        const loadSessionDetail = async (sessionId) => {
+            if (!sessionId) return
+            busy.detail = true
+            try {
+                const detail = await apiJson(`/api/codex/sessions/${encodeURIComponent(sessionId)}?includeMessages=true&includeNonChatRoles=false`, { method: 'GET' })
+                const s = sessions.value.find(x => x.id === sessionId)
+                if (!s) return
+                s.title = detail.title
+                s.cwd = detail.cwd || ''
+                s.folderId = detail.folderId || null
+                s.updatedAt = detail.updatedAt
+                s.archived = !!detail.archived
+                s.messages = (detail.messages || []).map((m) => ({
+                    id: m.id,
+                    role: m.role,
+                    time: timeFromIso(m.timestamp) || '',
+                    timestamp: m.timestamp,
+                    content: m.content,
+                }))
+                nextTick(() => {
+                    if (msgWrap.value) msgWrap.value.scrollTop = msgWrap.value.scrollHeight
+                })
+            } catch (e) {
+                console.error('loadSessionDetail failed', e)
+                setNotice('error', '加载 session 详情失败：' + (e && e.message ? e.message : e))
+            } finally {
+                busy.detail = false
+            }
+        }
+
+        const updateSession = async (sessionId, patch) => {
+            await apiJson(`/api/codex/sessions/${encodeURIComponent(sessionId)}`, {
+                method: 'PATCH',
+                body: JSON.stringify(patch || {}),
+            })
+            await loadSessions(searchQuery.value)
+        }
+
+        const switchArchived = async (flag) => {
+            if (showArchived.value === flag) return
+            showArchived.value = flag
+            await loadSessions(searchQuery.value)
+        }
+
+        const resumeSession = async (session) => {
+            if (!session) return
+            try {
+                const result = await apiJson(`/api/codex/sessions/${encodeURIComponent(session.id)}/resume`, {
+                    method: 'POST',
+                })
+                setNotice('success', `已在 iTerm2 恢复 session：${session.title}`)
+                console.log('resume result', result)
+            } catch (e) {
+                setNotice('error', '恢复 session 失败：' + (e && e.message ? e.message : e))
+            }
+        }
+
+        const cloneSession = async (session) => {
+            if (!session) return
+            try {
+                const cloned = await apiJson(`/api/codex/sessions/${encodeURIComponent(session.id)}/clone`, {
+                    method: 'POST',
+                })
+                showArchived.value = false
+                await loadSessions(searchQuery.value)
+                if (cloned && cloned.id) {
+                    activeId.value = cloned.id
+                    await loadSessionDetail(cloned.id)
+                }
+                setNotice('success', `Session 已克隆：${cloned && cloned.title ? cloned.title : '新副本'}`)
+            } catch (e) {
+                setNotice('error', '克隆 session 失败：' + (e && e.message ? e.message : e))
+            }
+        }
+
+        const updateMessage = async (messageId, content) => {
+            await apiJson(`/api/codex/messages/${encodeURIComponent(messageId)}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ content }),
+            })
+        }
+
+        const deleteMessageApi = async (messageId) => {
+            await apiJson(`/api/codex/messages/${encodeURIComponent(messageId)}`, { method: 'DELETE' })
+        }
+
+        const branchFromHere = async (msg) => {
+            if (!msg || !msg.id) return
+            try {
+                const branched = await apiJson(`/api/codex/messages/${encodeURIComponent(msg.id)}/branch`, {
+                    method: 'POST',
+                })
+                showArchived.value = false
+                await loadSessions(searchQuery.value)
+                if (branched && branched.id) {
+                    activeId.value = branched.id
+                    await loadSessionDetail(branched.id)
+                }
+                setNotice('success', `已从此处创建分支：${branched && branched.title ? branched.title : '新分支'}`)
+            } catch (e) {
+                setNotice('error', '创建分支失败：' + (e && e.message ? e.message : e))
+            }
+        }
+
+        // 搜索关键词高亮（返回带 <mark> 的 HTML 字符串）
+        const hl = (text) => {
+            const q = searchQuery.value.trim()
+            if (!q) return escHtml(text)
+            const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+            return escHtml(text).replace(re, m => `<mark>${m}</mark>`)
+        }
+
+        // 获取某文件夹下的可见 sessions
+        const getFolderSessions = (fid) =>
+            visibleSessions.value.filter(s => s.folderId === fid)
+
+        // 根据 id 查文件夹名称
+        const folderName = (fid) =>
+            folders.value.find(f => f.id === fid)?.name ?? ''
+
+        // session 最后一条消息的预览文本
+        const preview = (s) => {
+            if (s.preview && String(s.preview).trim()) return s.preview
+            return '暂无预览'
+        }
+
+        /* =============================================
+           侧边栏交互
+           ============================================= */
+        // 折叠/展开文件夹
+        const toggleFolder = (folder) => {
+            folder.collapsed = !folder.collapsed
+            folderUi.collapsed[folder.id] = folder.collapsed
+        }
+
+        // 选中 session
+        const selectSession = async (id) => {
+            activeId.value      = id
+            editingMsgId.value  = null
+            pendingDel.value    = null
+            editingTitle.value  = false
+            await loadSessionDetail(id)
+        }
+
+        /* =============================================
+           标题内联编辑
+           ============================================= */
+        const startEditTitle = () => {
+            if (!curSession.value) return
+            titleDraft.value = curSession.value.title
+            editingTitle.value = true
+            nextTick(() => titleRef.value?.focus())
+        }
+
+        const saveTitle = () => {
+            // 走后端 PATCH（overlay），不修改 Codex 原始数据
+            const s = curSession.value
+            if (!s) { editingTitle.value = false; return }
+            const nextTitle = titleDraft.value.trim()
+            if (!nextTitle) { editingTitle.value = false; return }
+            updateSession(s.id, { title: nextTitle }).finally(() => {
+                editingTitle.value = false
+            }).then(() => {
+                setNotice('success', 'Session 标题已更新')
+            }).catch((e) => {
+                setNotice('error', '更新标题失败：' + (e && e.message ? e.message : e))
+            })
+        }
+
+        /* =============================================
+           消息编辑
+           ============================================= */
+        const startEditMsg = (msg) => {
+            editingMsgId.value = msg.id
+            editDraft.value    = msg.content
+            pendingDel.value   = null
+            // 等 DOM 更新后聚焦 textarea
+            nextTick(() => {
+                const ta = document.querySelector('.edit-ta')
+                if (ta) { ta.focus(); ta.selectionStart = ta.value.length }
+            })
+        }
+
+        const saveEditMsg = async (msg) => {
+            const next = editDraft.value.trim()
+            if (!next) { editingMsgId.value = null; return }
+            try {
+                await updateMessage(msg.id, next)
+                if (curSession.value) {
+                    await loadSessionDetail(curSession.value.id)
+                }
+                setNotice('success', '消息已保存')
+            } catch (e) {
+                setNotice('error', '保存消息失败：' + (e && e.message ? e.message : e))
+            } finally {
+                editingMsgId.value = null
+            }
+        }
+
+        /* =============================================
+           消息删除（两步确认）
+           ============================================= */
+        const deleteMsg = async (msg) => {
+            if (pendingDel.value === msg.id) {
+                // 第二次点击 → 执行删除
+                try {
+                    await deleteMessageApi(msg.id)
+                    if (curSession.value) {
+                        await loadSessionDetail(curSession.value.id)
+                    }
+                    setNotice('success', '消息已删除')
+                } catch (e) {
+                    setNotice('error', '删除消息失败：' + (e && e.message ? e.message : e))
+                } finally {
+                    pendingDel.value = null
+                }
+            } else {
+                // 第一次点击 → 进入待确认状态
+                pendingDel.value = msg.id
+            }
+        }
+
+        /* =============================================
+           下拉菜单
+           ============================================= */
+        const openSessionMenu = (e, s) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            dd.x = Math.min(rect.right, window.innerWidth - 175)
+            dd.y = Math.min(rect.bottom + 4, window.innerHeight - 160)
+            dd.items = [
+                { label: '▶️  恢复到 iTerm2',  action: () => resumeSession(s) },
+                { label: '📄  克隆 Session',  action: () => cloneSession(s) },
+                { sep: true },
+                { label: '✏️  重命名',        action: () => openRenameSessionModal(s) },
+                { label: '📁  移到文件夹',     action: () => openMoveSessionModal(s) },
+                { sep: true },
+                {
+                    label: s.archived ? '♻️  取消归档' : '🗑  归档 Session',
+                    danger: !s.archived,
+                    action: () => toggleArchiveSession(s)
+                },
+            ]
+            dd.visible = true
+        }
+
+        const closeDropdown = () => { dd.visible = false }
+
+        const runDdItem = (item) => { closeDropdown(); item.action?.() }
+
+        /* =============================================
+           通用弹窗
+           ============================================= */
+        // fields 格式：[{ type: 'text'|'select'|'textarea', key, label, value, options? }]
+        const openModal = (title, fields, onOk) => {
+            modal.title  = title
+            modal.fields = fields
+            modal.vals   = Object.fromEntries(fields.map(f => [f.key, f.value ?? '']))
+            modal.onOk   = onOk
+            modal.show   = true
+            nextTick(() => document.querySelector('.field-input, .field-select')?.focus())
+        }
+
+        const confirmModal = () => {
+            modal.show = false
+            modal.onOk?.(modal.vals)
+        }
+
+        /* =============================================
+           确认弹窗
+           ============================================= */
+        const openConfirm = (msg, onOk) => {
+            confirm.msg  = msg
+            confirm.onOk = onOk
+            confirm.show = true
+        }
+
+        const doConfirm = () => {
+            confirm.show = false
+            confirm.onOk?.()
+        }
+
+        /* =============================================
+           Session 操作
+           ============================================= */
+        // 新建 Session
+        const openNewSessionModal = () => {
+            setNotice('info', '暂不支持从 codex-ui 创建新的 Codex session，目前只管理本地已有 session。')
+        }
+
+        // 重命名 Session（来自下拉菜单）
+        const openRenameSessionModal = (s) => {
+            openModal('重命名 Session', [
+                { type: 'text', key: 'title', label: 'Session 名称', value: s.title },
+            ], (vals) => {
+                if (!vals.title || !vals.title.trim()) return
+                updateSession(s.id, { title: vals.title.trim() }).then(() => {
+                    setNotice('success', 'Session 已重命名')
+                }).catch((e) => {
+                    setNotice('error', '重命名失败：' + (e && e.message ? e.message : e))
+                })
+            })
+        }
+
+        // 移到文件夹
+        const openMoveSessionModal = (s) => {
+            openModal('移到文件夹', [
+                {
+                    type: 'select', key: 'folderId', label: '选择文件夹',
+                    value: s.folderId || '',
+                    options: [
+                        { value: '', label: '（未分类）' },
+                        ...folders.value.map(f => ({ value: f.id, label: f.name })),
+                    ],
+                },
+            ], (vals) => {
+                updateSession(s.id, { folderId: vals.folderId || null }).then(() => {
+                    setNotice('success', 'Session 已移动')
+                }).catch((e) => {
+                    setNotice('error', '移动失败：' + (e && e.message ? e.message : e))
+                })
+            })
+        }
+
+        // 删除 Session（确认弹窗）
+        const confirmDeleteSession = (s) => {
+            openConfirm(`确定归档 Session「${s.title}」？（不会删除 Codex 原始文件，可在菜单里取消归档）`, () => {
+                updateSession(s.id, { archived: true }).then(() => {
+                    setNotice('success', 'Session 已归档')
+                }).catch((e) => {
+                    setNotice('error', '归档失败：' + (e && e.message ? e.message : e))
+                })
+            })
+        }
+
+        const toggleArchiveSession = (s) => {
+            if (!s) return
+            if (s.archived) {
+                updateSession(s.id, { archived: false }).then(() => {
+                    setNotice('success', 'Session 已取消归档')
+                }).catch((e) => {
+                    setNotice('error', '取消归档失败：' + (e && e.message ? e.message : e))
+                })
+                return
+            }
+            confirmDeleteSession(s)
+        }
+
+        // 添加消息（弹窗）
+        const openAddMsgModal = () => {
+            setNotice('info', '暂不支持新增消息，目前只支持对已存在消息做编辑/删除。')
+        }
+
+        /* =============================================
+           文件夹操作
+           ============================================= */
+        const openNewFolderModal = () => {
+            openModal('新建文件夹', [
+                { type: 'text', key: 'name', label: '文件夹名称', value: '' },
+            ], (vals) => {
+                if (!vals.name || !vals.name.trim()) return
+                apiJson('/api/codex/folders', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: vals.name.trim() }),
+                }).then(() => {
+                    loadFolders()
+                    setNotice('success', '文件夹已创建')
+                }).catch((e) => {
+                    setNotice('error', '新建文件夹失败：' + (e && e.message ? e.message : e))
+                })
+            })
+        }
+
+        const openRenameFolderModal = (folder) => {
+            openModal('重命名文件夹', [
+                { type: 'text', key: 'name', label: '文件夹名称', value: folder.name },
+            ], (vals) => {
+                if (!vals.name || !vals.name.trim()) return
+                apiJson(`/api/codex/folders/${encodeURIComponent(folder.id)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ name: vals.name.trim() }),
+                }).then(() => {
+                    loadFolders()
+                    setNotice('success', '文件夹已重命名')
+                }).catch((e) => {
+                    setNotice('error', '重命名文件夹失败：' + (e && e.message ? e.message : e))
+                })
+            })
+        }
+
+        const confirmDeleteFolder = (folder) => {
+            const cnt = sessions.value.filter(s => s.folderId === folder.id).length
+            const msg = cnt > 0
+                ? `文件夹「${folder.name}」下有 ${cnt} 个 session，删除后它们将移至未分类。确定继续吗？`
+                : `确定删除文件夹「${folder.name}」吗？`
+            openConfirm(msg, () => {
+                apiJson(`/api/codex/folders/${encodeURIComponent(folder.id)}`, { method: 'DELETE' })
+                    .then(() => Promise.all([loadFolders(), loadSessions(searchQuery.value)]))
+                    .then(() => setNotice('success', '文件夹已删除'))
+                    .catch((e) => setNotice('error', '删除文件夹失败：' + (e && e.message ? e.message : e)))
+            })
+        }
+
+        /* =============================================
+           初始加载 & 搜索
+           ============================================= */
+        onMounted(() => {
+            // 首屏加载
+            Promise.all([loadFolders(), loadSessions('')]).catch((e) => {
+                console.error('initial load failed', e)
+                setNotice('error', '加载 Codex 数据失败：' + (e && e.message ? e.message : e))
+            })
+        })
+
+        let searchTimer = null
+        watch(searchQuery, (val) => {
+            if (searchTimer) clearTimeout(searchTimer)
+            searchTimer = setTimeout(() => {
+                loadSessions(val).catch((e) => {
+                    console.error('search load failed', e)
+                })
+            }, 250)
+        })
+
+        /* =============================================
+           全局键盘快捷键（ESC 关闭所有浮层）
+           ============================================= */
+        const onKeydown = (e) => {
+            if (e.key === 'Escape') {
+                closeDropdown()
+                modal.show    = false
+                confirm.show  = false
+                editingTitle.value = false
+            }
+        }
+        onMounted(() => document.addEventListener('keydown', onKeydown))
+        onUnmounted(() => document.removeEventListener('keydown', onKeydown))
+
+        /* =============================================
+           暴露给模板的所有属性和方法
+           ============================================= */
+        return {
+            // 数据
+            folders, sessions,
+            // UI 状态
+            activeId, searchQuery, showArchived,
+            editingTitle, titleDraft, titleRef,
+            editingMsgId, editDraft, editTaRef,
+            pendingDel, msgWrap,
+            dd, modal, confirm, notice, busy,
+            // 计算属性
+            curSession, visibleSessions, uncategorized,
+            // 工具
+            hl, getFolderSessions, folderName, preview, clearNotice, formatSessionTime, formatFullTime,
+            // 侧边栏
+            toggleFolder, selectSession, switchArchived,
+            // 标题编辑
+            startEditTitle, saveTitle,
+            // 消息
+            startEditMsg, saveEditMsg, deleteMsg,
+            // 下拉
+            openSessionMenu, closeDropdown, runDdItem,
+            // 弹窗
+            confirmModal, doConfirm,
+            // Session 操作
+            openNewSessionModal, openRenameSessionModal,
+            openMoveSessionModal, confirmDeleteSession, openAddMsgModal,
+            toggleArchiveSession, resumeSession, cloneSession,
+            branchFromHere,
+            // 文件夹操作
+            openNewFolderModal, openRenameFolderModal, confirmDeleteFolder,
+        }
+    },
+}).mount('#app')
+</script>
+</body>
 </html>
